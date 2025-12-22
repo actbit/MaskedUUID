@@ -1,0 +1,6 @@
+@MaskedUUID.Sample_HostAddress = http://localhost:5204
+
+GET {{MaskedUUID.Sample_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
