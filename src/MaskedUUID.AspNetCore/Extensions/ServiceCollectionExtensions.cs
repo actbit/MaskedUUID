@@ -16,12 +16,14 @@ public static class ServiceCollectionExtensions
         // Register service if not already registered
         if (!services.Any(x => x.ServiceType == typeof(IMaskedUUIDService)))
         {
-            services.AddScoped<IMaskedUUIDService, MaskedUUIDService>();
+            services.AddSingleton<IMaskedUUIDService, MaskedUUIDService>();
         }
 
-        // Register JsonOptions configuration using IConfigureOptions<T>
-        // This uses constructor injection, avoiding BuildServiceProvider() call
-        services.AddSingleton<IConfigureOptions<JsonOptions>, MaskedUUIDJsonOptionsConfiguration>();
+        // Register JsonOptions configuration with MaskedGuid converter
+        services.AddSingleton<IConfigureOptions<JsonOptions>, MaskedGuidJsonOptionsConfiguration>();
+
+        // Register startup filter to initialize MaskedGuidConverter
+        services.AddSingleton<IStartupFilter, MaskedGuidConverterInitializationFilter>();
 
         return services;
     }

@@ -6,34 +6,17 @@ using Microsoft.Extensions.Options;
 namespace MaskedUUID.AspNetCore.Extensions;
 
 /// <summary>
-/// Factory for IConfigureOptions that creates converters with lazy-loaded service.
-/// This avoids calling BuildServiceProvider() during configuration.
+/// Configures JSON serialization options with MaskedGuid converter.
+/// MaskedGuid is a dedicated type for properties that should be masked,
+/// ensuring type-safe and automatic conversion without attribute checks.
 /// </summary>
-internal class MaskedUUIDJsonOptionsConfiguration : IConfigureOptions<JsonOptions>
+internal class MaskedGuidJsonOptionsConfiguration : IConfigureOptions<JsonOptions>
 {
-    private readonly IServiceProvider _serviceProvider;
-    private IMaskedUUIDService? _cachedService;
-
-    public MaskedUUIDJsonOptionsConfiguration(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
-
     public void Configure(JsonOptions options)
     {
-        var service = GetService();
-        options.JsonSerializerOptions.Converters.Add(
-            new MaskedUUIDGuidConverter(service));
-        options.JsonSerializerOptions.Converters.Add(
-            new MaskedUUIDNullableGuidConverter(service));
-    }
-
-    private IMaskedUUIDService GetService()
-    {
-        if (_cachedService != null)
-            return _cachedService;
-
-        _cachedService = _serviceProvider.GetRequiredService<IMaskedUUIDService>();
-        return _cachedService;
+        // Register MaskedGuid converter globally
+        // MaskedGuid type automatically uses this converter
+        // No attribute checking needed - type determines behavior
+        options.JsonSerializerOptions.Converters.Add(new MaskedGuidConverter());
     }
 }
