@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.DependencyInjection;
-using MaskedUUID.AspNetCore.Attributes;
 using MaskedUUID.AspNetCore.ModelBinding;
 using MaskedUUID.AspNetCore.Services;
+using MaskedUUID.AspNetCore.Types;
 using Moq;
 
 namespace MaskedUUID.AspNetCore.Tests;
@@ -39,9 +39,10 @@ public class MaskedUUIDModelBinderProviderTests
     }
 
     [Fact]
-    public void GetBinder_WithGuidTypeButNoValidatorMetadata_ReturnsNull()
+    public void GetBinder_WithPlainGuidType_ReturnsNull()
     {
-        // Arrange
+        // Arrange - plain Guid type (not MaskedGuid) should NOT get binder anymore
+        // Only MaskedGuid type parameters should be handled
         var metadata = CreateModelMetadata(typeof(Guid));
         var contextMock = new Mock<ModelBinderProviderContext>();
         contextMock.Setup(c => c.Metadata).Returns(metadata);
@@ -51,6 +52,69 @@ public class MaskedUUIDModelBinderProviderTests
 
         // Assert
         Assert.Null(result);
+    }
+
+    [Fact]
+    public void GetBinder_WithPlainNullableGuidType_ReturnsNull()
+    {
+        // Arrange - plain nullable Guid type (not MaskedGuid?) should NOT get binder
+        var metadata = CreateModelMetadata(typeof(Guid?));
+        var contextMock = new Mock<ModelBinderProviderContext>();
+        contextMock.Setup(c => c.Metadata).Returns(metadata);
+
+        // Act
+        var result = _provider.GetBinder(contextMock.Object);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void GetBinder_WithMaskedGuidType_ReturnsBinder()
+    {
+        // Arrange - MaskedGuid type should automatically get binder for URL parameter binding
+        var metadata = CreateModelMetadata(typeof(MaskedGuid));
+        var serviceMock = new Mock<IMaskedUUIDService>();
+        var serviceProviderMock = new Mock<IServiceProvider>();
+
+        serviceProviderMock
+            .Setup(sp => sp.GetService(typeof(IMaskedUUIDService)))
+            .Returns(serviceMock.Object);
+
+        var contextMock = new Mock<ModelBinderProviderContext>();
+        contextMock.Setup(c => c.Metadata).Returns(metadata);
+        contextMock.Setup(c => c.Services).Returns(serviceProviderMock.Object);
+
+        // Act
+        var result = _provider.GetBinder(contextMock.Object);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.IsType<MaskedUUIDModelBinder>(result);
+    }
+
+    [Fact]
+    public void GetBinder_WithNullableMaskedGuidType_ReturnsBinder()
+    {
+        // Arrange - nullable MaskedGuid type should also get binder
+        var metadata = CreateModelMetadata(typeof(MaskedGuid?));
+        var serviceMock = new Mock<IMaskedUUIDService>();
+        var serviceProviderMock = new Mock<IServiceProvider>();
+
+        serviceProviderMock
+            .Setup(sp => sp.GetService(typeof(IMaskedUUIDService)))
+            .Returns(serviceMock.Object);
+
+        var contextMock = new Mock<ModelBinderProviderContext>();
+        contextMock.Setup(c => c.Metadata).Returns(metadata);
+        contextMock.Setup(c => c.Services).Returns(serviceProviderMock.Object);
+
+        // Act
+        var result = _provider.GetBinder(contextMock.Object);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.IsType<MaskedUUIDModelBinder>(result);
     }
 
     private static ModelMetadata CreateModelMetadata(Type modelType)

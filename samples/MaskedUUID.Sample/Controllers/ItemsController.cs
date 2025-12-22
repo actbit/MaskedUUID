@@ -1,4 +1,4 @@
-using MaskedUUID.AspNetCore.Attributes;
+using MaskedUUID.AspNetCore.Types;
 using MaskedUUID.Sample.Dtos;
 using MaskedUUID.Sample.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +7,7 @@ namespace MaskedUUID.Sample.Controllers;
 
 /// <summary>
 /// Item 管理 API
-/// [MaskedUUID] 属性を使用して、自動的に URL パラメータを変換
+/// MaskedGuid 型を使用して、自動的に URL パラメータを変換
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -36,14 +36,14 @@ public class ItemsController : ControllerBase
     /// <summary>
     /// 特定の Item を ID で取得
     ///
-    /// [MaskedUUID] 属性により、URL の {itemId} が自動的に MaskedUUID から Guid に変換される
+    /// MaskedGuid 型により、URL の {itemId} が自動的に MaskedUUID から Guid に変換される
     /// 例: /api/items/abc123def... → Guid に変換
     /// </summary>
     [HttpGet("{itemId}")]
-    public async Task<ActionResult<ItemDto>> GetById([MaskedUUID] Guid itemId)
+    public async Task<ActionResult<ItemDto>> GetById(MaskedGuid itemId)
     {
-        _logger.LogInformation("GetById called with itemId: {ItemId}", itemId);
-        var item = await _itemService.GetItemAsync(itemId);
+        _logger.LogInformation("GetById called with itemId: {ItemId}", itemId.Value);
+        var item = await _itemService.GetItemAsync(itemId.Value);
 
         if (item == null)
             return NotFound();
@@ -72,17 +72,17 @@ public class ItemsController : ControllerBase
     /// <summary>
     /// Item を更新
     ///
-    /// [MaskedUUID] により URL の {itemId} が自動変換
+    /// MaskedGuid 型により URL の {itemId} が自動変換
     /// レスポンスの Id も自動的に MaskedUUID に変換
     /// </summary>
     [HttpPut("{itemId}")]
     public async Task<ActionResult<ItemDto>> Update(
-        [MaskedUUID] Guid itemId,
+        MaskedGuid itemId,
         [FromBody] UpdateItemRequest request)
     {
-        _logger.LogInformation("Update called with itemId: {ItemId}", itemId);
+        _logger.LogInformation("Update called with itemId: {ItemId}", itemId.Value);
 
-        var item = await _itemService.UpdateItemAsync(itemId, request);
+        var item = await _itemService.UpdateItemAsync(itemId.Value, request);
 
         if (item == null)
             return NotFound();
@@ -93,14 +93,14 @@ public class ItemsController : ControllerBase
     /// <summary>
     /// Item を削除
     ///
-    /// [MaskedUUID] により URL の {itemId} が自動変換
+    /// MaskedGuid 型により URL の {itemId} が自動変換
     /// </summary>
     [HttpDelete("{itemId}")]
-    public async Task<IActionResult> Delete([MaskedUUID] Guid itemId)
+    public async Task<IActionResult> Delete(MaskedGuid itemId)
     {
-        _logger.LogInformation("Delete called with itemId: {ItemId}", itemId);
+        _logger.LogInformation("Delete called with itemId: {ItemId}", itemId.Value);
 
-        var success = await _itemService.DeleteItemAsync(itemId);
+        var success = await _itemService.DeleteItemAsync(itemId.Value);
 
         if (!success)
             return NotFound();

@@ -1,20 +1,19 @@
-using MaskedUUID.AspNetCore.Attributes;
+using MaskedUUID.AspNetCore.Types;
 
 namespace MaskedUUID.Sample.Dtos;
 
 /// <summary>
 /// Item のレスポンス DTO
-/// [MaskedUUID] 属性がついた Guid フィールドは自動的に MaskedUUID に変換される
+/// MaskedGuid 型のフィールドは自動的に MaskedUUID に変換される
 /// </summary>
 public class ItemDto
 {
     /// <summary>
-    /// Item ID（MaskedUUID として自動変換）
-    /// レスポンスでは Guid が MaskedUUID 文字列に変換され、
-    /// リクエストでは MaskedUUID 文字列が Guid に変換される
+    /// Item ID（MaskedGuid として自動変換）
+    /// レスポンスでは MaskedGuid が MaskedUUID 文字列に変換され、
+    /// リクエストでは MaskedUUID 文字列が MaskedGuid に変換される
     /// </summary>
-    [MaskedUUID]
-    public Guid Id { get; set; }
+    public MaskedGuid Id { get; set; }
 
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;

@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.DependencyInjection;
-using MaskedUUID.AspNetCore.Attributes;
 using MaskedUUID.AspNetCore.Services;
+using MaskedUUID.AspNetCore.Types;
 
 namespace MaskedUUID.AspNetCore.ModelBinding;
 
+/// <summary>
+/// ModelBinder provider that handles MaskedGuid type parameters for URL/query parameters
+/// </summary>
 public class MaskedUUIDModelBinderProvider : IModelBinderProvider
 {
     public IModelBinder? GetBinder(ModelBinderProviderContext context)
@@ -12,26 +15,16 @@ public class MaskedUUIDModelBinderProvider : IModelBinderProvider
         if (context == null)
             throw new ArgumentNullException(nameof(context));
 
-        if (context.Metadata.ModelType != typeof(Guid) && context.Metadata.ModelType != typeof(Guid?))
+        var modelType = context.Metadata.ModelType;
+        var isMaskedGuidType = modelType == typeof(MaskedGuid) || modelType == typeof(MaskedGuid?);
+
+        // Support MaskedGuid type directly
+        if (isMaskedGuidType)
         {
-            return null;
+            var maskedUUIDService = context.Services.GetRequiredService<IMaskedUUIDService>();
+            return new MaskedUUIDModelBinder(maskedUUIDService);
         }
 
-        var hasMaskedUUIDAttribute = false;
-
-        if (context.Metadata.ValidatorMetadata != null)
-        {
-            hasMaskedUUIDAttribute = context.Metadata.ValidatorMetadata
-                .OfType<MaskedUUIDAttribute>()
-                .Any();
-        }
-
-        if (!hasMaskedUUIDAttribute)
-        {
-            return null;
-        }
-
-        var maskedUUIDService = context.Services.GetRequiredService<IMaskedUUIDService>();
-        return new MaskedUUIDModelBinder(maskedUUIDService);
+        return null;
     }
 }
