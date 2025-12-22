@@ -4,6 +4,7 @@ using MaskedUUID.AspNetCore.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using System.Text.Json.Serialization;
 
 namespace MaskedUUID.AspNetCore.Extensions;
@@ -12,16 +13,15 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddMaskedUUID(this IServiceCollection services)
     {
-        services.Configure<JsonOptions>(options =>
+        // Register service if not already registered
+        if (!services.Any(x => x.ServiceType == typeof(IMaskedUUIDService)))
         {
-            var maskedUUIDService = services.BuildServiceProvider()
-                .GetRequiredService<IMaskedUUIDService>();
+            services.AddScoped<IMaskedUUIDService, MaskedUUIDService>();
+        }
 
-            options.JsonSerializerOptions.Converters.Add(
-                new MaskedUUIDGuidConverter(maskedUUIDService));
-            options.JsonSerializerOptions.Converters.Add(
-                new MaskedUUIDNullableGuidConverter(maskedUUIDService));
-        });
+        // Register JsonOptions configuration using IConfigureOptions<T>
+        // This uses constructor injection, avoiding BuildServiceProvider() call
+        services.AddSingleton<IConfigureOptions<JsonOptions>, MaskedUUIDJsonOptionsConfiguration>();
 
         return services;
     }
