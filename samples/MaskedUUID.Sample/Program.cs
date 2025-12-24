@@ -1,15 +1,23 @@
 using MaskedUUID.AspNetCore.Extensions;
 using MaskedUUID.AspNetCore.KeyProviders;
 using MaskedUUID.AspNetCore.Services;
+using MaskedUUID.AspNetCore.Types;
 using MaskedUUID.Sample.KeyProviders;
 using MaskedUUID.Sample.Services;
+using Microsoft.OpenApi;
+using System.Text.Json.Nodes;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
-builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+var mvcBuilder = builder.Services.AddControllers();
+
+// Use AddOpenApi for MaskedGuid schema configuration
+//builder.Services.AddOpenApi(x=>x.AddMaskedUUIDOpenApi());
+Guid guid = new Guid("12345678-1234-1234-1234-1234567890ab");
+// Use AddSwaggerGen for Swagger UI (to avoid XML comment processing issues with AddOpenApi)
 builder.Services.AddSwaggerGen();
+
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMemoryCache();
 
@@ -20,14 +28,15 @@ builder.Services.AddMemoryCache();
 //    (Tenant resolution is handled internally by the KeyProvider)
 builder.Services.AddScoped<IMaskedUUIDKeyProvider, SampleUUIDv47KeyProvider>();
 
-// 2. IMaskedUUIDService を登録（キープロバイダーを使用）
-builder.Services.AddScoped<IMaskedUUIDService, MaskedUUIDService>();
-
-// 3. MaskedUUID ASP.NET Core 統合を登録
-//    - JSON コンバーターの登録
-//    - ModelBinder プロバイダーの登録
+// 2. MaskedUUID ASP.NET Core 統合を登録
+//    - Registers IMaskedUUIDService as Singleton
+//    - Registers JSON コンバーター
+//    - Registers ModelBinder プロバイダー
 builder.Services.AddMaskedUUID();
-builder.Services.AddControllers().AddMaskedUUIDModelBinder();
+mvcBuilder.AddMaskedUUIDModelBinder();
+// Note: AddOpenApi() disabled due to XML comment processing NullReferenceException
+// Use Swagger/Swashbuckle for API documentation instead
+// builder.Services.AddOpenApi(x => x.AddMaskedUUIDOpenApi());
 
 // Sample アプリケーション固有のサービス
 builder.Services.AddScoped<IItemService, ItemService>();
@@ -41,8 +50,12 @@ var app = builder.Build();
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "Items API"));
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Items API");
+        options.RoutePrefix = string.Empty; // Swagger UI at root
+    });
 }
 
 app.UseHttpsRedirection();

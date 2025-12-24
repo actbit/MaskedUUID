@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.DependencyInjection;
 using MaskedUUID.AspNetCore.Services;
@@ -21,8 +22,11 @@ public class MaskedUUIDModelBinderProvider : IModelBinderProvider
         // Support MaskedGuid type directly
         if (isMaskedGuidType)
         {
-            var maskedUUIDService = context.Services.GetRequiredService<IMaskedUUIDService>();
-            return new MaskedUUIDModelBinder(maskedUUIDService);
+            // Get HttpContextAccessor from root provider
+            var httpContextAccessor = context.Services.GetRequiredService<IHttpContextAccessor>();
+
+            // Create a factory function that resolves the service from the request scope
+            return new MaskedUUIDModelBinder(httpContextAccessor);
         }
 
         return null;

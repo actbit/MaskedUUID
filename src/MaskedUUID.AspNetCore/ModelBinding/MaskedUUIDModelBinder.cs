@@ -1,6 +1,8 @@
 using MaskedUUID.AspNetCore.Services;
 using MaskedUUID.AspNetCore.Types;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MaskedUUID.AspNetCore.ModelBinding;
 
@@ -10,11 +12,11 @@ namespace MaskedUUID.AspNetCore.ModelBinding;
 /// </summary>
 public class MaskedUUIDModelBinder : IModelBinder
 {
-    private readonly IMaskedUUIDService _service;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public MaskedUUIDModelBinder(IMaskedUUIDService service)
+    public MaskedUUIDModelBinder(IHttpContextAccessor httpContextAccessor)
     {
-        _service = service ?? throw new ArgumentNullException(nameof(service));
+        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
     }
 
     public Task BindModelAsync(ModelBindingContext bindingContext)
@@ -33,7 +35,14 @@ public class MaskedUUIDModelBinder : IModelBinder
 
         try
         {
-            var guid = _service.DecodeSynchronous(value);
+            // Get the scoped IMaskedUUIDService from the current request scope
+            var service = _httpContextAccessor.HttpContext?.RequestServices
+                .GetRequiredService<IMaskedUUIDService>();
+
+            if (service == null)
+                throw new InvalidOperationException("IMaskedUUIDService is not available in the current request scope");
+
+            var guid = service.DecodeSynchronous(value);
 
             // Support both Guid and MaskedGuid parameter types
             if (bindingContext.ModelType == typeof(MaskedGuid))

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using MaskedUUID.AspNetCore.ModelBinding;
 using MaskedUUID.AspNetCore.Services;
@@ -8,6 +9,7 @@ namespace MaskedUUID.AspNetCore.Tests;
 
 public class MaskedUUIDModelBinderTests
 {
+    private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
     private readonly Mock<IMaskedUUIDService> _serviceMock;
     private readonly MaskedUUIDModelBinder _binder;
     private readonly Guid _testGuid = Guid.Parse("12345678-1234-5678-1234-567812345678");
@@ -15,13 +17,14 @@ public class MaskedUUIDModelBinderTests
 
     public MaskedUUIDModelBinderTests()
     {
+        _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
         _serviceMock = new Mock<IMaskedUUIDService>();
-        _binder = new MaskedUUIDModelBinder(_serviceMock.Object);
+        _binder = new MaskedUUIDModelBinder(_httpContextAccessorMock.Object);
         _testMaskedGuid = new MaskedGuid(_testGuid);
     }
 
     [Fact]
-    public void Constructor_WithNullService_ThrowsArgumentNullException()
+    public void Constructor_WithNullHttpContextAccessor_ThrowsArgumentNullException()
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new MaskedUUIDModelBinder(null!));
@@ -43,6 +46,9 @@ public class MaskedUUIDModelBinderTests
         var resultValue = ModelBindingResult.Failed();
         var bindingContext = CreateMockBindingContext(modelName, valueProviderResult, resultValue, typeof(MaskedGuid));
 
+        // Setup HttpContextAccessor - no need for service when no value
+        _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(new DefaultHttpContext());
+
         // Act
         await _binder.BindModelAsync(bindingContext);
 
@@ -62,6 +68,12 @@ public class MaskedUUIDModelBinderTests
         var valueProviderResult = new ValueProviderResult(new string[] { maskedUuid });
         var modelName = "itemId";
         var bindingContext = CreateMockBindingContext(modelName, valueProviderResult, ModelBindingResult.Failed(), typeof(MaskedGuid));
+
+        // Setup HttpContextAccessor to return service from RequestServices
+        var httpContext = new DefaultHttpContext();
+        var serviceProvider = new MockServiceProvider(_serviceMock.Object);
+        httpContext.RequestServices = serviceProvider;
+        _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(httpContext);
 
         // Act
         await _binder.BindModelAsync(bindingContext);
@@ -85,6 +97,12 @@ public class MaskedUUIDModelBinderTests
         var valueProviderResult = new ValueProviderResult(new string[] { maskedUuid });
         var modelName = "filterId";
         var bindingContext = CreateMockBindingContext(modelName, valueProviderResult, ModelBindingResult.Failed(), typeof(MaskedGuid?));
+
+        // Setup HttpContextAccessor to return service from RequestServices
+        var httpContext = new DefaultHttpContext();
+        var serviceProvider = new MockServiceProvider(_serviceMock.Object);
+        httpContext.RequestServices = serviceProvider;
+        _httpContextAccessorMock.Setup(a => a.HttpContext).Returns(httpContext);
 
         // Act
         await _binder.BindModelAsync(bindingContext);
@@ -117,5 +135,25 @@ public class MaskedUUIDModelBinderTests
         contextMock.SetupGet(c => c.Result).Returns(() => result);
 
         return contextMock.Object;
+    }
+
+    /// <summary>
+    /// Helper service provider that returns the IMaskedUUIDService mock
+    /// </summary>
+    private class MockServiceProvider : IServiceProvider
+    {
+        private readonly IMaskedUUIDService _service;
+
+        public MockServiceProvider(IMaskedUUIDService service)
+        {
+            _service = service;
+        }
+
+        public object? GetService(Type serviceType)
+        {
+            if (serviceType == typeof(IMaskedUUIDService))
+                return _service;
+            return null;
+        }
     }
 }

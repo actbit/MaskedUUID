@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.DependencyInjection;
 using MaskedUUID.AspNetCore.ModelBinding;
@@ -74,12 +75,12 @@ public class MaskedUUIDModelBinderProviderTests
     {
         // Arrange - MaskedGuid type should automatically get binder for URL parameter binding
         var metadata = CreateModelMetadata(typeof(MaskedGuid));
-        var serviceMock = new Mock<IMaskedUUIDService>();
+        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
         var serviceProviderMock = new Mock<IServiceProvider>();
 
         serviceProviderMock
-            .Setup(sp => sp.GetService(typeof(IMaskedUUIDService)))
-            .Returns(serviceMock.Object);
+            .Setup(sp => sp.GetService(typeof(IHttpContextAccessor)))
+            .Returns(httpContextAccessorMock.Object);
 
         var contextMock = new Mock<ModelBinderProviderContext>();
         contextMock.Setup(c => c.Metadata).Returns(metadata);
@@ -98,12 +99,12 @@ public class MaskedUUIDModelBinderProviderTests
     {
         // Arrange - nullable MaskedGuid type should also get binder
         var metadata = CreateModelMetadata(typeof(MaskedGuid?));
-        var serviceMock = new Mock<IMaskedUUIDService>();
+        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
         var serviceProviderMock = new Mock<IServiceProvider>();
 
         serviceProviderMock
-            .Setup(sp => sp.GetService(typeof(IMaskedUUIDService)))
-            .Returns(serviceMock.Object);
+            .Setup(sp => sp.GetService(typeof(IHttpContextAccessor)))
+            .Returns(httpContextAccessorMock.Object);
 
         var contextMock = new Mock<ModelBinderProviderContext>();
         contextMock.Setup(c => c.Metadata).Returns(metadata);

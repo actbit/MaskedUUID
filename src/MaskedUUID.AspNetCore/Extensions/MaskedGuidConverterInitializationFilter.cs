@@ -11,20 +11,21 @@ namespace MaskedUUID.AspNetCore.Extensions;
 /// </summary>
 internal class MaskedGuidConverterInitializationFilter : IStartupFilter
 {
-    private readonly IMaskedUUIDService _service;
-
-    public MaskedGuidConverterInitializationFilter(IMaskedUUIDService service)
-    {
-        _service = service;
-    }
-
     public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
     {
-        // Initialize MaskedGuidConverter with the service
-        // This must be called before the application starts handling requests
-        MaskedGuidConverter.Initialize(_service);
+        return app =>
+        {
+            // Create a scope to resolve the scoped IMaskedUUIDService
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                var service = scope.ServiceProvider.GetRequiredService<IMaskedUUIDService>();
+                // Initialize MaskedGuidConverter with the service
+                // This must be called before the application starts handling requests
+                MaskedGuidConverter.Initialize(service);
+            }
 
-        // Call the next filter
-        return next;
+            // Call the next filter
+            next(app);
+        };
     }
 }

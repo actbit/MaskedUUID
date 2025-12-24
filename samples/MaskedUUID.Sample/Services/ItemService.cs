@@ -1,4 +1,5 @@
 using MaskedUUID.AspNetCore.Extensions;
+using MaskedUUID.AspNetCore.Types;
 using MaskedUUID.Sample.Dtos;
 using MaskedUUID.Sample.Models;
 
@@ -108,7 +109,7 @@ public class ItemService : IItemService
 
     private static ItemDto MapToDto(Item item) => new()
     {
-        Id = item.Id,
+        Id = new MaskedGuid(item.Id),
         Name = item.Name,
         Description = item.Description,
         CreatedAt = item.CreatedAt
