@@ -2,7 +2,7 @@ using MaskedUUID.AspNetCore.Types;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
-namespace MaskedUUID.Sample.OpenApi;
+namespace MaskedUUID.AspNetCore.OpenApi;
 
 public sealed class MaskedGuidSchemaTransformer : IOpenApiSchemaTransformer
 {

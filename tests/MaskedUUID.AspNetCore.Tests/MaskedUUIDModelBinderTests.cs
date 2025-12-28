@@ -135,6 +135,7 @@ public class MaskedUUIDModelBinderTests
         _serviceMock.Verify(s => s.DecodeSynchronous(maskedUuid), Times.Once);
     }
 
+    [Fact]
     public async Task BindModelAsync_WithEmptyGuid_BindsEmptyMaskedGuid()
     {
         // Arrange - MaskedGuid type parameter
