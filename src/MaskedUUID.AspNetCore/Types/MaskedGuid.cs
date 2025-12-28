@@ -3,11 +3,11 @@ namespace MaskedUUID.AspNetCore.Types;
 /// <summary>
 /// マスク済み GUID を表す型
 /// JsonConverter で自動的に暗号化/復号化される
-/// [MaskedUUID] 属性を持つプロパティに使用
+/// MaskedGuid 型としてプロパティに使用
 /// </summary>
 public readonly struct MaskedGuid : IEquatable<MaskedGuid>, IComparable<MaskedGuid>
 {
-    public Guid Value { get; }
+    internal Guid Value { get; }
 
     public MaskedGuid(Guid value)
     {

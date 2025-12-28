@@ -2,16 +2,20 @@ using MaskedUUID.AspNetCore.Extensions;
 using MaskedUUID.AspNetCore.KeyProviders;
 using MaskedUUID.AspNetCore.Services;
 using MaskedUUID.Sample.KeyProviders;
+using MaskedUUID.Sample.OpenApi;
 using MaskedUUID.Sample.Services;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddSchemaTransformer<MaskedGuidSchemaTransformer>();
+});
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMemoryCache();
+//builder.Services.AddSingleton<IApiDescriptionProvider, NullModelMetadataFixApiDescriptionProvider>();
 
 // MaskedUUID 関連サービスの登録
 // Note: Tenant management is handled internally by KeyProvider implementation

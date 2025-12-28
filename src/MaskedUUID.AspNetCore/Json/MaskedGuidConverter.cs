@@ -2,6 +2,8 @@ using MaskedUUID.AspNetCore.Services;
 using MaskedUUID.AspNetCore.Types;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MaskedUUID.AspNetCore.Json;
 
@@ -11,19 +13,11 @@ namespace MaskedUUID.AspNetCore.Json;
 /// </summary>
 public class MaskedGuidConverter : JsonConverter<MaskedGuid>
 {
-    private static IMaskedUUIDService? _service;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public MaskedGuidConverter()
+    public MaskedGuidConverter(IHttpContextAccessor httpContextAccessor)
     {
-    }
-
-    /// <summary>
-    /// Initialize the converter with the MaskedUUID service
-    /// Must be called during application startup
-    /// </summary>
-    public static void Initialize(IMaskedUUIDService service)
-    {
-        _service = service;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public override MaskedGuid Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -37,8 +31,7 @@ public class MaskedGuidConverter : JsonConverter<MaskedGuid>
 
         try
         {
-            var service = _service ?? throw new InvalidOperationException(
-                "MaskedGuidConverter not initialized. Call MaskedGuidConverter.Initialize(service) during app startup.");
+            var service = ResolveService();
             var guid = service.DecodeSynchronous(maskedUuid);
             return new MaskedGuid(guid);
         }
@@ -62,8 +55,7 @@ public class MaskedGuidConverter : JsonConverter<MaskedGuid>
 
         try
         {
-            var service = _service ?? throw new InvalidOperationException(
-                "MaskedGuidConverter not initialized. Call MaskedGuidConverter.Initialize(service) during app startup.");
+            var service = ResolveService();
             var maskedUuid = service.EncodeSynchronous(value.Value);
             writer.WriteStringValue(maskedUuid);
         }
@@ -75,5 +67,17 @@ public class MaskedGuidConverter : JsonConverter<MaskedGuid>
         {
             throw new JsonException("Failed to encode GUID to MaskedUUID", ex);
         }
+    }
+
+    private IMaskedUUIDService ResolveService()
+    {
+        var requestServices = _httpContextAccessor.HttpContext?.RequestServices;
+        if (requestServices is not null)
+        {
+            return requestServices.GetRequiredService<IMaskedUUIDService>();
+        }
+
+        throw new InvalidOperationException(
+            "No HttpContext available to resolve IMaskedUUIDService. Ensure MaskedGuid is used within an HTTP request scope.");
     }
 }

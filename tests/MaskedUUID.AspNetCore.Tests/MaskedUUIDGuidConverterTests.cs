@@ -47,8 +47,11 @@ public class MaskedUUIDGuidConverterTests
         var reader = new Utf8JsonReader(jsonBytes);
         reader.Read(); // Move to null token
 
-        // Act & Assert - should handle null gracefully or return Empty
-        // The converter returns Guid.Empty for null or empty strings
+        // Act
+        var result = _converter.Read(ref reader, typeof(Guid), new JsonSerializerOptions());
+
+        // Assert
+        Assert.Equal(Guid.Empty, result);
     }
 
     [Fact]

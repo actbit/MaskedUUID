@@ -29,7 +29,7 @@ public class ItemService : IItemService
         // Sample データ
         var sampleItem = new Item
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             Name = "Sample Item 1",
             Description = "This is a sample item",
             CreatedAt = DateTime.UtcNow
@@ -60,7 +60,7 @@ public class ItemService : IItemService
     {
         var item = new Item
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             Name = request.Name,
             Description = request.Description,
             CreatedAt = DateTime.UtcNow

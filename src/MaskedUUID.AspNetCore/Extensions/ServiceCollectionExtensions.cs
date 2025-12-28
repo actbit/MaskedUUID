@@ -1,7 +1,7 @@
 using MaskedUUID.AspNetCore.Json;
+using MaskedUUID.AspNetCore.KeyProviders;
 using MaskedUUID.AspNetCore.ModelBinding;
 using MaskedUUID.AspNetCore.Services;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -13,19 +13,27 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddMaskedUUID(this IServiceCollection services)
     {
+        services.AddHttpContextAccessor();
         // Register service if not already registered
         if (!services.Any(x => x.ServiceType == typeof(IMaskedUUIDService)))
         {
-            services.AddSingleton<IMaskedUUIDService, MaskedUUIDService>();
+            services.AddScoped<IMaskedUUIDService, MaskedUUIDService>();
         }
 
         // Register JsonOptions configuration with MaskedGuid converter
         services.AddSingleton<IConfigureOptions<JsonOptions>, MaskedGuidJsonOptionsConfiguration>();
 
-        // Register startup filter to initialize MaskedGuidConverter
-        services.AddSingleton<IStartupFilter, MaskedGuidConverterInitializationFilter>();
-
         return services;
+    }
+
+    public static IServiceCollection AddMaskedUUIDWithReferenceKeys(this IServiceCollection services)
+    {
+        if (!services.Any(x => x.ServiceType == typeof(IMaskedUUIDKeyProvider)))
+        {
+            services.AddScoped<IMaskedUUIDKeyProvider, ReferenceUUIDv47KeyProvider>();
+        }
+
+        return services.AddMaskedUUID();
     }
 
     public static IMvcBuilder AddMaskedUUIDModelBinder(this IMvcBuilder mvcBuilder)
@@ -36,5 +44,11 @@ public static class ServiceCollectionExtensions
         });
 
         return mvcBuilder;
+    }
+
+    public static IMvcBuilder AddMaskedUUIDControllers(this IMvcBuilder mvcBuilder)
+    {
+        mvcBuilder.Services.AddMaskedUUID();
+        return mvcBuilder.AddMaskedUUIDModelBinder();
     }
 }

@@ -53,19 +53,20 @@ public class MaskedUUIDService : IMaskedUUIDService
 
     public async Task<List<string>> EncodeListAsync(IEnumerable<Guid> guids)
     {
+        if (guids is null)
+            throw new ArgumentNullException(nameof(guids));
+
         var (keyK0, keyK1) = await _keyProvider.GetKeysAsync();
         return guids.ToMaskedUUIDList(keyK0, keyK1);
     }
 
     public async Task<List<Guid>> DecodeListAsync(IEnumerable<string> maskedUuids)
     {
+        if (maskedUuids is null)
+            throw new ArgumentNullException(nameof(maskedUuids));
+
         var (keyK0, keyK1) = await _keyProvider.GetKeysAsync();
         return maskedUuids.FromMaskedUUIDList(keyK0, keyK1);
-    }
-
-    public bool IsValidMaskedUUID(string value)
-    {
-        return value.IsValidMaskedUUID();
     }
 
     public string EncodeSynchronous(Guid guid)

@@ -93,31 +93,6 @@ public class MaskedUUIDServiceTests
     }
 
     [Fact]
-    public void IsValidMaskedUUID_WithValidFormat_ReturnsBoolean()
-    {
-        // Arrange
-        var encoded = _service.EncodeSynchronous(_testGuid);
-
-        // Act
-        var result = _service.IsValidMaskedUUID(encoded);
-
-        // Assert
-        Assert.IsType<bool>(result);
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("invalid")]
-    public void IsValidMaskedUUID_WithInvalidValues_ReturnsFalse(string value)
-    {
-        // Act
-        var result = _service.IsValidMaskedUUID(value);
-
-        // Assert
-        Assert.False(result);
-    }
-
-    [Fact]
     public async Task DecodeAsync_WithValidMaskedUuid_ReturnsGuidType()
     {
         // Arrange - First encode a GUID

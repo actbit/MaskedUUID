@@ -1,6 +1,6 @@
 using MaskedUUID.AspNetCore.Json;
-using MaskedUUID.AspNetCore.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 
 namespace MaskedUUID.AspNetCore.Extensions;
@@ -12,11 +12,18 @@ namespace MaskedUUID.AspNetCore.Extensions;
 /// </summary>
 internal class MaskedGuidJsonOptionsConfiguration : IConfigureOptions<JsonOptions>
 {
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public MaskedGuidJsonOptionsConfiguration(IHttpContextAccessor httpContextAccessor)
+    {
+        _httpContextAccessor = httpContextAccessor;
+    }
+
     public void Configure(JsonOptions options)
     {
         // Register MaskedGuid converter globally
         // MaskedGuid type automatically uses this converter
         // No attribute checking needed - type determines behavior
-        options.JsonSerializerOptions.Converters.Add(new MaskedGuidConverter());
+        options.JsonSerializerOptions.Converters.Add(new MaskedGuidConverter(_httpContextAccessor));
     }
 }

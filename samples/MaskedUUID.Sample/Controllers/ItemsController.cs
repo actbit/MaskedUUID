@@ -40,10 +40,11 @@ public class ItemsController : ControllerBase
     /// 例: /api/items/abc123def... → Guid に変換
     /// </summary>
     [HttpGet("{itemId}")]
-    public async Task<ActionResult<ItemDto>> GetById(MaskedGuid itemId)
+    public async Task<ActionResult<ItemDto>> GetById([FromRoute] MaskedGuid itemId)
     {
-        _logger.LogInformation("GetById called with itemId: {ItemId}", itemId.Value);
-        var item = await _itemService.GetItemAsync(itemId.Value);
+        Guid id = itemId;
+        _logger.LogInformation("GetById called with itemId: {ItemId}", id);
+        var item = await _itemService.GetItemAsync(id);
 
         if (item == null)
             return NotFound();
@@ -77,12 +78,13 @@ public class ItemsController : ControllerBase
     /// </summary>
     [HttpPut("{itemId}")]
     public async Task<ActionResult<ItemDto>> Update(
-        MaskedGuid itemId,
+        [FromRoute] MaskedGuid itemId,
         [FromBody] UpdateItemRequest request)
     {
-        _logger.LogInformation("Update called with itemId: {ItemId}", itemId.Value);
+        Guid id = itemId;
+        _logger.LogInformation("Update called with itemId: {ItemId}", id);
 
-        var item = await _itemService.UpdateItemAsync(itemId.Value, request);
+        var item = await _itemService.UpdateItemAsync(id, request);
 
         if (item == null)
             return NotFound();
@@ -96,11 +98,12 @@ public class ItemsController : ControllerBase
     /// MaskedGuid 型により URL の {itemId} が自動変換
     /// </summary>
     [HttpDelete("{itemId}")]
-    public async Task<IActionResult> Delete(MaskedGuid itemId)
+    public async Task<IActionResult> Delete([FromRoute] MaskedGuid itemId)
     {
-        _logger.LogInformation("Delete called with itemId: {ItemId}", itemId.Value);
+        Guid id = itemId;
+        _logger.LogInformation("Delete called with itemId: {ItemId}", id);
 
-        var success = await _itemService.DeleteItemAsync(itemId.Value);
+        var success = await _itemService.DeleteItemAsync(id);
 
         if (!success)
             return NotFound();
