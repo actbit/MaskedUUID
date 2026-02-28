@@ -32,3 +32,59 @@ ASP.NET Core で GUID を「MaskedUUID」形式へ変換するためのライブ
 3. `AddMaskedUUID()` と `AddMaskedUUIDModelBinder()` を追加
 
 サンプルは `samples/MaskedUUID.Sample` を参照してください。
+
+## MVC / API Controllers
+
+```csharp
+// KeyProviderを登録（Singleton推奨、Scopedも可）
+builder.Services.AddSingleton<IMaskedUUIDKeyProvider, MyKeyProvider>();
+
+// MaskedUUID対応を追加
+builder.Services.AddMaskedUUID();
+
+// ModelBinderを追加（URL/クエリパラメータ用）
+mvcBuilder.AddMaskedUUIDModelBinder();
+
+// または一括で
+mvcBuilder.AddMaskedUUIDControllers();
+```
+
+## SignalR
+
+SignalR対応には `AddMaskedUUID()` 拡張メソッドを使用します。
+
+```csharp
+// KeyProviderを登録
+builder.Services.AddSingleton<IMaskedUUIDKeyProvider, MyKeyProvider>();
+
+// SignalRにMaskedUUID対応を追加
+builder.Services.AddSignalR().AddMaskedUUID();
+```
+
+### SignalRスコープ対応
+
+SignalR用のコンバーターは以下の優先順位でサービスを解決します：
+
+1. **Hubスコープ** - Hub呼び出し内のスコープ（HubFilter経由）
+2. **HttpContextスコープ** - HTTP接続の場合
+3. **一時スコープ** - フォールバック
+
+これにより、KeyProvider/Serviceが **Singleton / Scoped / Transient** のいずれでも正しく動作します。
+
+### 開発用（参照キー使用）
+
+```csharp
+// 開発/テスト用に参照キーを使用（本番では使用しないでください）
+builder.Services.AddSignalR().AddMaskedUUIDWithReferenceKeys();
+```
+
+## OpenAPI / Swagger
+
+.NET 9 / .NET 10 両方に対応しています。
+
+```csharp
+// OpenAPIスキーマトランスフォーマーを追加
+builder.Services.AddOpenApi(options => options.AddMaskedGuidSchemaTransformer());
+```
+
+.NET 10では `JsonSchemaType` enum、.NET 9では文字列ベースの型指定に自動的に対応します。
