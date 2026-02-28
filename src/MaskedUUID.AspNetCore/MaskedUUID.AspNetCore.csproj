@@ -17,6 +17,22 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
+    <IsPackable>true</IsPackable>
+
+    <!-- NuGet Package Settings -->
+    <PackageId>MaskedUUID.AspNetCore</PackageId>
+    <VersionPrefix>1.0</VersionPrefix>
+    <Authors>actbit</Authors>
+    <Description>ASP.NET Core で UUIDv7 のタイムスタンプ部を UUIDv47 アルゴリズムでマスクし、可逆的に変換するライブラリ</Description>
+    <PackageTags>uuid;uuidv7;uuidv47;aspnetcore;masking</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/actbit/MaskedUUID</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
 </Project>
