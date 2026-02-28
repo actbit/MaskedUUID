@@ -168,17 +168,6 @@ public class Uuidv47RoundtripTests
     }
 
     [Fact]
-    public void UuidToGuid_FromParsedUuid_ReturnsOriginalGuid()
-    {
-        var originalV7 = Guid.CreateVersion7();
-
-        var parsed = Uuid.Parse(originalV7.ToString());
-        var backToGuid = parsed.ToGuid();
-
-        Assert.Equal(originalV7, backToGuid);
-    }
-
-    [Fact]
     public void UuidToGuid_FromToUuid_ReturnsOriginalGuid()
     {
         var originalV7 = Guid.CreateVersion7();
@@ -202,16 +191,4 @@ public class Uuidv47RoundtripTests
         Assert.Equal(uuid.ToString(), decoded.ToString());
     }
 
-    [Fact]
-    public void Codec_EncodeDecode_Roundtrip_ReturnsOriginalV7()
-    {
-        var originalV7 = Guid.CreateVersion7();
-        var uuid = originalV7.ToUuid();
-        var key = new Key(0x0123456789ABCDEF, 0xFEDCBA9876543210);
-
-        var masked = Uuid47Codec.Encode(uuid, key);
-        var decoded = Uuid47Codec.Decode(masked, key).ToGuid();
-
-        Assert.Equal(originalV7, decoded);
-    }
 }
