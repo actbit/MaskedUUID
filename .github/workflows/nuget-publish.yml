@@ -1,0 +1,84 @@
+name: Publish to NuGet
+
+on:
+  push:
+    branches: [ release ]
+  workflow_dispatch:
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # タグ取得用
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          9.0.x
+          10.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build src/MaskedUUID.AspNetCore/MaskedUUID.AspNetCore.csproj --configuration Release --no-restore
+
+    - name: Build Tests
+      run: dotnet build tests/MaskedUUID.AspNetCore.Tests/MaskedUUID.AspNetCore.Tests.csproj --configuration Release --no-restore
+
+    - name: Test
+      run: dotnet test tests/MaskedUUID.AspNetCore.Tests/MaskedUUID.AspNetCore.Tests.csproj --configuration Release --no-build --verbosity normal
+
+    - name: Calculate Version
+      id: version
+      run: |
+        # csprojからVersionPrefixを取得
+        VERSION_PREFIX=$(grep -oP '(?<=<VersionPrefix>)[^<]+' src/MaskedUUID.AspNetCore/MaskedUUID.AspNetCore.csproj)
+        echo "VersionPrefix: $VERSION_PREFIX"
+
+        # 前回のタグを取得
+        PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+        if [ -z "$PREV_TAG" ]; then
+          # タグがない場合は初回リリース
+          VERSION="${VERSION_PREFIX}.0"
+        else
+          # 前回タグからx.yを抽出
+          PREV_XY=$(echo $PREV_TAG | sed 's/^v//' | cut -d. -f1,2)
+          PREV_Z=$(echo $PREV_TAG | sed 's/^v//' | cut -d. -f3)
+
+          if [ "$PREV_XY" = "$VERSION_PREFIX" ]; then
+            # 同じx.yならzをインクリメント
+            NEW_Z=$((PREV_Z + 1))
+            VERSION="${VERSION_PREFIX}.${NEW_Z}"
+          else
+            # 異なるx.yならz=0
+            VERSION="${VERSION_PREFIX}.0"
+          fi
+        fi
+
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Package Version: $VERSION"
+
+    - name: Pack
+      run: dotnet pack src/MaskedUUID.AspNetCore/MaskedUUID.AspNetCore.csproj
+        --configuration Release
+        --output ./nupkg
+        /p:PackageVersion=${{ steps.version.outputs.version }}
+
+    - name: Publish to NuGet
+      run: dotnet nuget push ./nupkg/*.nupkg
+        --api-key ${{ secrets.NUGET_API_KEY }}
+        --source https://api.nuget.org/v3/index.json
+        --skip-duplicate
+
+    - name: Create Git Tag
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git tag v${{ steps.version.outputs.version }}
+        git push origin v${{ steps.version.outputs.version }}
