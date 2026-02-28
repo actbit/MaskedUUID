@@ -16,7 +16,7 @@ public class MaskedUUIDModelBinder : IModelBinder
         if (bindingContext == null)
             throw new ArgumentNullException(nameof(bindingContext));
 
-        var service = bindingContext.HttpContext?.RequestServices.GetRequiredService<IMaskedUUIDService>();
+        var service = bindingContext.HttpContext?.RequestServices.GetService<IMaskedUUIDService>();
         if (service is null)
         {
             bindingContext.ModelState.AddModelError(
