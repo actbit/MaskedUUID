@@ -27,14 +27,14 @@ public class MaskedUUIDHubFilter : IHubFilter
         }
     }
 
-    public Task OnConnectedAsync(HubLifetimeContext context, Func<HubLifetimeContext, Task> next)
+    public async Task OnConnectedAsync(HubLifetimeContext context, Func<HubLifetimeContext, Task> next)
     {
         // Set scope for OnConnected
         MaskedUUIDHubScopeProvider.SetScope(context.ServiceProvider);
 
         try
         {
-            return next(context);
+            await next(context);
         }
         finally
         {
@@ -42,14 +42,14 @@ public class MaskedUUIDHubFilter : IHubFilter
         }
     }
 
-    public Task OnDisconnectedAsync(HubLifetimeContext context, Exception? exception, Func<HubLifetimeContext, Exception?, Task> next)
+    public async Task OnDisconnectedAsync(HubLifetimeContext context, Exception? exception, Func<HubLifetimeContext, Exception?, Task> next)
     {
         // Set scope for OnDisconnected
         MaskedUUIDHubScopeProvider.SetScope(context.ServiceProvider);
 
         try
         {
-            return next(context, exception);
+            await next(context, exception);
         }
         finally
         {
